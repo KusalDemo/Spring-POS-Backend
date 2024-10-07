@@ -16,11 +16,12 @@ public class Item implements SuperEntity {
     @Id
     @Column(name = "property_id")
     private String propertyId;
+    @Column(unique = true)
     private String name;
     private String description;
     private double price;
     private int qty;
 
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<OrderItem> orderItems;
 }

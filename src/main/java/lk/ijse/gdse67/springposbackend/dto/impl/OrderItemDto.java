@@ -1,4 +1,4 @@
-package lk.ijse.gdse67.springposbackend.dto;
+package lk.ijse.gdse67.springposbackend.dto.impl;
 
 
 import lombok.*;

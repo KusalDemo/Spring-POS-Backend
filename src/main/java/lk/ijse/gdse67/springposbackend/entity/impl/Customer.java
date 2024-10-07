@@ -17,10 +17,11 @@ public class Customer implements SuperEntity {
     @Column(name = "property_id")
     private String propertyId;
     private String name;
+    @Column(unique = true)
     private String email;
     private String address;
-    private String branch;
+    private boolean availability;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<PlaceOrder> orders;
 }
