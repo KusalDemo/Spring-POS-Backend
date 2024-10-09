@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class PlaceOrderDto {
-    private String propertyId;
+    private String orderId;
     private String customerId;
     private Date orderDate;
     private double paid;
