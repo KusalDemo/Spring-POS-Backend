@@ -4,6 +4,7 @@ import lk.ijse.gdse67.springposbackend.dao.CustomerDao;
 import lk.ijse.gdse67.springposbackend.dao.ItemDao;
 import lk.ijse.gdse67.springposbackend.dao.OrderDao;
 import lk.ijse.gdse67.springposbackend.dao.OrderItemDao;
+import lk.ijse.gdse67.springposbackend.dto.impl.OrderItemDto;
 import lk.ijse.gdse67.springposbackend.dto.impl.PlaceOrderDto;
 import lk.ijse.gdse67.springposbackend.entity.impl.*;
 import lk.ijse.gdse67.springposbackend.exception.CustomerNotFoundException;
@@ -68,5 +69,41 @@ public class OrderServiceImpl implements OrderService {
         });
         placeOrder.setOrderItems(orderItemsList);
         orderDao.save(placeOrder);
+    }
+
+    @Override
+    public List<PlaceOrderDto> getAllOrders() {
+        List<PlaceOrder> placeOrders = orderDao.findAll();
+        List<PlaceOrderDto> placeOrderDtos=new ArrayList<>();
+
+        placeOrders.forEach(placeOrder -> {
+            PlaceOrderDto placeOrderDto = PlaceOrderDto.builder()
+                    .orderId(placeOrder.getOrderId())
+                    .customerId(placeOrder.getCustomer().getPropertyId())
+                    .orderDate(placeOrder.getOrderDate())
+                    .paid(placeOrder.getPaid())
+                    .discount(placeOrder.getDiscount())
+                    .balance(placeOrder.getBalance())
+                    .orderItems(getOrderItemList(placeOrder.getOrderItems()))
+                    .build();
+
+            placeOrderDtos.add(placeOrderDto);
+        });
+        return placeOrderDtos;
+    }
+
+    private List<OrderItemDto> getOrderItemList(List<OrderItem> orderItems){
+        List<OrderItemDto> orderItemDtos=new ArrayList<>();
+        orderItems.forEach(orderItem -> {
+            OrderItemDto orderItemDto = OrderItemDto.builder()
+                    .orderId(orderItem.getPropertyId().getOrderId())
+                    .itemId(orderItem.getPropertyId().getItemId())
+                    .itemCount(orderItem.getItemCount())
+                    .unitPrice(orderItem.getUnitPrice())
+                    .total(orderItem.getTotal())
+                    .build();
+            orderItemDtos.add(orderItemDto);
+        });
+        return orderItemDtos;
     }
 }
