@@ -36,10 +36,20 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void addOrder(PlaceOrderDto placeOrderDto) {
         String orderId = AppUtil.generateOrderId();
-        List<OrderItem> orderItemList = new ArrayList<>();
+
+        PlaceOrder placeOrder = mapper.mapToPlaceOrder(placeOrderDto);
+        placeOrder.setOrderId(orderId);
+
+        Customer orderPlacingCustomer = customerDao.getReferenceById(placeOrderDto.getCustomerId());
+        placeOrder.setCustomer(orderPlacingCustomer);
+
+        List<OrderItem> orderItemsList = new ArrayList<>();
+        placeOrder.setOrderItems(orderItemsList);
+
+        orderDao.save(placeOrder);
+
         placeOrderDto.getOrderItems().forEach(orderItemDto -> {
             OrderItemId orderItemId = new OrderItemId(orderId, orderItemDto.getItemId());
-            System.out.println("OrderItem id : "+orderItemId);
             Item orderItem = itemDao.getReferenceById(orderItemDto.getItemId());
 
             orderItem.setQty(orderItem.getQty() - orderItemDto.getItemCount());
@@ -51,28 +61,12 @@ public class OrderServiceImpl implements OrderService {
                     .itemCount(orderItemDto.getItemCount())
                     .unitPrice(orderItemDto.getUnitPrice())
                     .total(orderItemDto.getTotal())
+                    .placeOrder(placeOrder)
                     .build();
-            System.out.println(orderItemToAdd.getPropertyId()+" - "+orderItemToAdd.getUnitPrice());
-            orderItemList.add(orderItemToAdd);
+            orderItemsList.add(orderItemToAdd);
             orderItemDao.save(orderItemToAdd);
         });
-
-        PlaceOrder placeOrder = mapper.mapToPlaceOrder(placeOrderDto);
-        placeOrder.setOrderItems(orderItemList);
-        placeOrder.setOrderId(orderId);
-        Customer orderPlacingCustomer;
-
-        try {
-            orderPlacingCustomer = customerDao.getReferenceById(placeOrderDto.getCustomerId());
-            placeOrder.setCustomer(orderPlacingCustomer);
-            System.out.println(placeOrder.getCustomer().getPropertyId() + " " + placeOrder.getOrderId());
-
-            orderDao.save(placeOrder);
-
-        } catch (CustomerNotFoundException e) {
-            throw new CustomerNotFoundException("Invalid Customer Id");
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+        placeOrder.setOrderItems(orderItemsList);
+        orderDao.save(placeOrder);
     }
 }

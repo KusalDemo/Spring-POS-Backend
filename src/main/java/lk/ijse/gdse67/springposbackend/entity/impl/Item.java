@@ -2,6 +2,7 @@ package lk.ijse.gdse67.springposbackend.entity.impl;
 
 import jakarta.persistence.*;
 import lk.ijse.gdse67.springposbackend.entity.SuperEntity;
+import lk.ijse.gdse67.springposbackend.util.AppUtil;
 import lombok.*;
 import java.util.List;
 
@@ -24,4 +25,9 @@ public class Item implements SuperEntity {
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<OrderItem> orderItems;
+
+    /*@PrePersist
+    private void prePersist() {
+        propertyId = propertyId == null ? AppUtil.generateItemId() : propertyId;
+    }*/
 }
