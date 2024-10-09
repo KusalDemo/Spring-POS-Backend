@@ -3,11 +3,9 @@ package lk.ijse.gdse67.springposbackend.service.impl;
 import lk.ijse.gdse67.springposbackend.dao.CustomerDao;
 import lk.ijse.gdse67.springposbackend.dao.ItemDao;
 import lk.ijse.gdse67.springposbackend.dao.OrderDao;
+import lk.ijse.gdse67.springposbackend.dao.OrderItemDao;
 import lk.ijse.gdse67.springposbackend.dto.impl.PlaceOrderDto;
-import lk.ijse.gdse67.springposbackend.entity.impl.Customer;
-import lk.ijse.gdse67.springposbackend.entity.impl.Item;
-import lk.ijse.gdse67.springposbackend.entity.impl.OrderItem;
-import lk.ijse.gdse67.springposbackend.entity.impl.PlaceOrder;
+import lk.ijse.gdse67.springposbackend.entity.impl.*;
 import lk.ijse.gdse67.springposbackend.exception.CustomerNotFoundException;
 import lk.ijse.gdse67.springposbackend.service.CustomerService;
 import lk.ijse.gdse67.springposbackend.service.OrderService;
@@ -17,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,17 +29,37 @@ public class OrderServiceImpl implements OrderService {
     private CustomerDao customerDao;
     @Autowired
     private ItemDao itemDao;
+    @Autowired
+    private OrderItemDao orderItemDao;
 
 
     @Override
     public void addOrder(PlaceOrderDto placeOrderDto) {
-        List<OrderItem> orderItemList = null;
+        String orderId = AppUtil.generateOrderId();
+        List<OrderItem> orderItemList = new ArrayList<>();
         placeOrderDto.getOrderItems().forEach(orderItemDto -> {
-            /*orderItemList.add(itemDao.getReferenceById(orderItemDto.getItemId()));*/
-            new OrderItem(orderItemDto.getItemId(), placeOrderDto.getOrderId(), orderItemDto.getItemCount(), orderItemDto.getUnitPrice(), orderItemDto.getUnitPrice() * orderItemDto.getItemCount());
+            OrderItemId orderItemId = new OrderItemId(orderId, orderItemDto.getItemId());
+            System.out.println("OrderItem id : "+orderItemId);
+            Item orderItem = itemDao.getReferenceById(orderItemDto.getItemId());
+
+            orderItem.setQty(orderItem.getQty() - orderItemDto.getItemCount());
+            itemDao.save(orderItem);
+
+            OrderItem orderItemToAdd = OrderItem.builder()
+                    .propertyId(orderItemId)
+                    .item(orderItem)
+                    .itemCount(orderItemDto.getItemCount())
+                    .unitPrice(orderItemDto.getUnitPrice())
+                    .total(orderItemDto.getTotal())
+                    .build();
+            System.out.println(orderItemToAdd.getPropertyId()+" - "+orderItemToAdd.getUnitPrice());
+            orderItemList.add(orderItemToAdd);
+            orderItemDao.save(orderItemToAdd);
         });
+
         PlaceOrder placeOrder = mapper.mapToPlaceOrder(placeOrderDto);
-        placeOrder.setOrderId(AppUtil.generateOrderId());
+        placeOrder.setOrderItems(orderItemList);
+        placeOrder.setOrderId(orderId);
         Customer orderPlacingCustomer;
 
         try {
@@ -48,25 +67,12 @@ public class OrderServiceImpl implements OrderService {
             placeOrder.setCustomer(orderPlacingCustomer);
             System.out.println(placeOrder.getCustomer().getPropertyId() + " " + placeOrder.getOrderId());
 
-            placeOrderDto.getOrderItems().stream().map(orderItemDto -> {
-                /*return mapper.mapToItemDto(itemDao.getReferenceById(orderItemDto.getItemId()));*/
-                Item itemInOrder = itemDao.getReferenceById(orderItemDto.getItemId());
-                itemInOrder.setQty(itemInOrder.getQty() - orderItemDto.getItemCount());
-                itemDao.save(itemInOrder);
-
-            });
+            orderDao.save(placeOrder);
 
         } catch (CustomerNotFoundException e) {
             throw new CustomerNotFoundException("Invalid Customer Id");
+        }catch (Exception e){
+            e.printStackTrace();
         }
-
-        if (orderPlacingCustomer == null) {
-            throw new IllegalArgumentException("Invalid Customer Id");
-        }
-        placeOrderDto.getOrderItems().forEach(orderItemDto -> {
-
-        });
-        placeOrder.setCustomer(orderPlacingCustomer);
-        orderDao.save(placeOrder);
     }
 }
