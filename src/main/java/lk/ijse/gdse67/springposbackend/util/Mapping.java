@@ -44,24 +44,33 @@ public class Mapping {
     }
 
     // Order related Mappings
-
-    public OrderItemDto mapToOrderItemDto(OrderItem orderItem){
-        return modelMapper.map(orderItem,OrderItemDto.class);
-    }
     public OrderItem mapToOrderItem(OrderItemDto orderItemDto){
         return modelMapper.map(orderItemDto,OrderItem.class);
     }
-    public List<OrderItemDto> mapToOrderItemDtoList(List<OrderItem> orderItems){
-        return modelMapper.map(orderItems, List.class);
-    }
 
-    public List<OrderItem> mapToOrderItemList(List<OrderItemDto> orderItemDtos){
-        return modelMapper.map(orderItemDtos, List.class);
-    }
-    public PlaceOrderDto mapToPlaceOrderDto(PlaceOrder placeOrder){
-        return modelMapper.map(placeOrder, PlaceOrderDto.class);
-    }
     public PlaceOrder mapToPlaceOrder(PlaceOrderDto placeOrderDto){
         return modelMapper.map(placeOrderDto, PlaceOrder.class);
+    }
+
+    public PlaceOrderDto mapToPlaceOrderDto(PlaceOrder placeOrder,List<OrderItemDto> orderItemDtos){
+        return PlaceOrderDto.builder()
+                .orderId(placeOrder.getOrderId())
+                .customerId(placeOrder.getCustomer().getPropertyId())
+                .orderDate(placeOrder.getOrderDate())
+                .paid(placeOrder.getPaid())
+                .discount(placeOrder.getDiscount())
+                .balance(placeOrder.getBalance())
+                .orderItems(orderItemDtos)
+                .build();
+    }
+
+    public OrderItemDto mapToOrderItemDto(OrderItem orderItem){
+        return OrderItemDto.builder()
+                .orderId(orderItem.getPropertyId().getOrderId())
+                .itemId(orderItem.getPropertyId().getItemId())
+                .itemCount(orderItem.getItemCount())
+                .unitPrice(orderItem.getUnitPrice())
+                .total(orderItem.getTotal())
+                .build();
     }
 }

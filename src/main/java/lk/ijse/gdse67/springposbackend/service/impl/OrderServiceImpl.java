@@ -77,16 +77,8 @@ public class OrderServiceImpl implements OrderService {
         List<PlaceOrderDto> placeOrderDtos=new ArrayList<>();
 
         placeOrders.forEach(placeOrder -> {
-            PlaceOrderDto placeOrderDto = PlaceOrderDto.builder()
-                    .orderId(placeOrder.getOrderId())
-                    .customerId(placeOrder.getCustomer().getPropertyId())
-                    .orderDate(placeOrder.getOrderDate())
-                    .paid(placeOrder.getPaid())
-                    .discount(placeOrder.getDiscount())
-                    .balance(placeOrder.getBalance())
-                    .orderItems(getOrderItemList(placeOrder.getOrderItems()))
-                    .build();
-
+            List<OrderItemDto> orderItemList = getOrderItemList(placeOrder.getOrderItems());
+            PlaceOrderDto placeOrderDto = mapper.mapToPlaceOrderDto(placeOrder,orderItemList);
             placeOrderDtos.add(placeOrderDto);
         });
         return placeOrderDtos;
@@ -95,13 +87,7 @@ public class OrderServiceImpl implements OrderService {
     private List<OrderItemDto> getOrderItemList(List<OrderItem> orderItems){
         List<OrderItemDto> orderItemDtos=new ArrayList<>();
         orderItems.forEach(orderItem -> {
-            OrderItemDto orderItemDto = OrderItemDto.builder()
-                    .orderId(orderItem.getPropertyId().getOrderId())
-                    .itemId(orderItem.getPropertyId().getItemId())
-                    .itemCount(orderItem.getItemCount())
-                    .unitPrice(orderItem.getUnitPrice())
-                    .total(orderItem.getTotal())
-                    .build();
+            OrderItemDto orderItemDto = mapper.mapToOrderItemDto(orderItem);
             orderItemDtos.add(orderItemDto);
         });
         return orderItemDtos;
