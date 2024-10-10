@@ -37,15 +37,20 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public void updateCustomer(String propertyId, CustomerDto customerDto) {
-        Customer customer = customerDao.getReferenceById(propertyId);
-        if (customer == null) {
-            throw new CustomerNotFoundException("Customer not found");
+        try{
+            Customer customer = customerDao.getReferenceById(propertyId);
+            if (customer == null) {
+                throw new CustomerNotFoundException("Customer not found");
+            }
+            customer.setName(customerDto.getName());
+            customer.setEmail(customerDto.getEmail());
+            customer.setAddress(customerDto.getAddress());
+            customer.setAvailability(customerDto.isAvailability());
+            customerDao.save(customer);
+        }catch (DataPersistException e){
+            throw new DataPersistException("Failed to update customer");
         }
-        customer.setName(customerDto.getName());
-        customer.setEmail(customerDto.getEmail());
-        customer.setAddress(customerDto.getAddress());
-        customer.setAvailability(customerDto.isAvailability());
-        customerDao.save(customer);
+
     }
 
     @Override

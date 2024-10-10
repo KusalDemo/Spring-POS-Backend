@@ -1,5 +1,8 @@
 package lk.ijse.gdse67.springposbackend.controller;
 
+import jakarta.persistence.EntityNotFoundException;
+import lk.ijse.gdse67.springposbackend.customStatusCodes.SelectedOrderStatus;
+import lk.ijse.gdse67.springposbackend.dto.OrderStatus;
 import lk.ijse.gdse67.springposbackend.dto.impl.PlaceOrderDto;
 import lk.ijse.gdse67.springposbackend.exception.CustomerNotFoundException;
 import lk.ijse.gdse67.springposbackend.service.OrderService;
@@ -35,5 +38,15 @@ public class OrderController {
     @GetMapping
     public List<PlaceOrderDto> getAllOrders(){
         return orderService.getAllOrders();
+    }
+
+    @GetMapping(value = "/{propertyId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public OrderStatus getOrder(@PathVariable("propertyId") String propertyId) {
+        try{
+            return orderService.getOrder(propertyId);
+        }catch (EntityNotFoundException e){
+            e.printStackTrace();
+            return new SelectedOrderStatus(1,"Order Details Not Found");
+        }
     }
 }

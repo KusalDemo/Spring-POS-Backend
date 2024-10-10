@@ -1,14 +1,14 @@
 package lk.ijse.gdse67.springposbackend.service.impl;
 
+import lk.ijse.gdse67.springposbackend.customStatusCodes.SelectedOrderStatus;
 import lk.ijse.gdse67.springposbackend.dao.CustomerDao;
 import lk.ijse.gdse67.springposbackend.dao.ItemDao;
 import lk.ijse.gdse67.springposbackend.dao.OrderDao;
 import lk.ijse.gdse67.springposbackend.dao.OrderItemDao;
+import lk.ijse.gdse67.springposbackend.dto.OrderStatus;
 import lk.ijse.gdse67.springposbackend.dto.impl.OrderItemDto;
 import lk.ijse.gdse67.springposbackend.dto.impl.PlaceOrderDto;
 import lk.ijse.gdse67.springposbackend.entity.impl.*;
-import lk.ijse.gdse67.springposbackend.exception.CustomerNotFoundException;
-import lk.ijse.gdse67.springposbackend.service.CustomerService;
 import lk.ijse.gdse67.springposbackend.service.OrderService;
 import lk.ijse.gdse67.springposbackend.util.AppUtil;
 import lk.ijse.gdse67.springposbackend.util.Mapping;
@@ -82,6 +82,13 @@ public class OrderServiceImpl implements OrderService {
             placeOrderDtos.add(placeOrderDto);
         });
         return placeOrderDtos;
+    }
+
+    @Override
+    public OrderStatus getOrder(String orderId) {
+        PlaceOrder placeOrder = orderDao.getReferenceById(orderId);
+        List<OrderItemDto> orderItemList = getOrderItemList(placeOrder.getOrderItems());
+        return mapper.mapToPlaceOrderDto(placeOrder,orderItemList);
     }
 
     private List<OrderItemDto> getOrderItemList(List<OrderItem> orderItems){

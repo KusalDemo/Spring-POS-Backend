@@ -1,5 +1,7 @@
 package lk.ijse.gdse67.springposbackend.dto.impl;
 
+import lk.ijse.gdse67.springposbackend.dto.OrderStatus;
+import lk.ijse.gdse67.springposbackend.dto.SuperDto;
 import lombok.*;
 
 import java.util.Date;
@@ -10,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PlaceOrderDto {
+public class PlaceOrderDto implements OrderStatus , SuperDto {
     private String orderId;
     private String customerId;
     private Date orderDate;

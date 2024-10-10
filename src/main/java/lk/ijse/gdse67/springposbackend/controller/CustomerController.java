@@ -49,7 +49,7 @@ public class CustomerController {
         try {
             customerService.updateCustomer(propertyId, customerDto);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }catch (CustomerNotFoundException e){
+        }catch (CustomerNotFoundException | DataPersistException e){
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }catch (Exception e){
