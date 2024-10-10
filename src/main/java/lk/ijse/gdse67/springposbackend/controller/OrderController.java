@@ -5,6 +5,8 @@ import lk.ijse.gdse67.springposbackend.customStatusCodes.SelectedOrderStatus;
 import lk.ijse.gdse67.springposbackend.dto.OrderStatus;
 import lk.ijse.gdse67.springposbackend.dto.impl.PlaceOrderDto;
 import lk.ijse.gdse67.springposbackend.exception.CustomerNotFoundException;
+import lk.ijse.gdse67.springposbackend.exception.ItemNotFoundException;
+import lk.ijse.gdse67.springposbackend.exception.OrderNotFoundException;
 import lk.ijse.gdse67.springposbackend.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,7 +28,7 @@ public class OrderController {
         try{
             orderService.addOrder(placeOrderDto);
             return new ResponseEntity<>(HttpStatus.CREATED);
-        }catch (CustomerNotFoundException e){
+        }catch (CustomerNotFoundException | ItemNotFoundException e){
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }catch (Exception e){
@@ -44,9 +46,9 @@ public class OrderController {
     public OrderStatus getOrder(@PathVariable("propertyId") String propertyId) {
         try{
             return orderService.getOrder(propertyId);
-        }catch (EntityNotFoundException e){
+        }catch (EntityNotFoundException | OrderNotFoundException e){
             e.printStackTrace();
-            return new SelectedOrderStatus(1,"Order Details Not Found");
+            return new SelectedOrderStatus(1,"Order Not Found");
         }
     }
 }
