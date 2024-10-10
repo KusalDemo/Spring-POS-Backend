@@ -8,6 +8,7 @@ import lk.ijse.gdse67.springposbackend.exception.CustomerNotFoundException;
 import lk.ijse.gdse67.springposbackend.exception.ItemNotFoundException;
 import lk.ijse.gdse67.springposbackend.exception.OrderNotFoundException;
 import lk.ijse.gdse67.springposbackend.service.OrderService;
+import lk.ijse.gdse67.springposbackend.util.Regex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -44,11 +45,16 @@ public class OrderController {
 
     @GetMapping(value = "/{propertyId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public OrderStatus getOrder(@PathVariable("propertyId") String propertyId) {
+        boolean isOrderIdValid = Regex.ORDER_ID.validate(propertyId);
         try{
-            return orderService.getOrder(propertyId);
+            if(isOrderIdValid){
+                return orderService.getOrder(propertyId);
+            }else{
+                return new SelectedOrderStatus(1, "Order Id Invalid");
+            }
         }catch (EntityNotFoundException | OrderNotFoundException e){
             e.printStackTrace();
-            return new SelectedOrderStatus(1,"Order Not Found");
+            return new SelectedOrderStatus(2,"Order Not Found");
         }
     }
 }

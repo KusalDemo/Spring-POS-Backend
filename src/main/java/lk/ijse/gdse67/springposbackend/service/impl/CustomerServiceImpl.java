@@ -66,7 +66,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerStatus getCustomer(String propertyId) {
         Customer fetchedCustomer = customerDao.getReferenceById(propertyId);
         if (fetchedCustomer == null) {
-            return new SelectedCustomerStatus(1, "Customer not found");
+            return new SelectedCustomerStatus(2, "Customer not found");
         }
         return mapper.mapToCustomerDto(fetchedCustomer);
     }
