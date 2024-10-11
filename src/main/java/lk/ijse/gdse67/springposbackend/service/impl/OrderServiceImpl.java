@@ -111,4 +111,28 @@ public class OrderServiceImpl implements OrderService {
         });
         return orderItemDtos;
     }
+
+    public void returnOrderItems(List<OrderItemDto> orderItemDtos){
+        orderItemDtos.forEach(orderItemDto -> {
+            OrderItemId orderItemId = new OrderItemId(orderItemDto.getOrderId(), orderItemDto.getItemId());
+            Item item = itemDao.getReferenceById(orderItemId.getItemId());
+            if (item == null) {
+                throw new ItemNotFoundException("Item not found");
+            }else{
+                item.setQty(item.getQty() + orderItemDto.getItemCount());
+                itemDao.save(item);
+            }
+
+            OrderItem fetchedOrderItem = orderItemDao.getReferenceById(orderItemId);
+            if (fetchedOrderItem.getItemCount() == 0) {
+                orderItemDao.deleteById(orderItemId);
+            }else{
+                PlaceOrder fetchedOrder = orderDao.getReferenceById(orderItemDto.getOrderId());
+                fetchedOrder.setBalance(fetchedOrder.getBalance() + ((orderItemDto.getTotal()/100)*(100-fetchedOrder.getDiscount())*orderItemDto.getItemCount()));
+                fetchedOrderItem.setItemCount(fetchedOrderItem.getItemCount() - orderItemDto.getItemCount());
+                fetchedOrderItem.setTotal(fetchedOrderItem.getTotal() - (fetchedOrderItem.getUnitPrice()*orderItemDto.getItemCount()));
+                orderItemDao.save(fetchedOrderItem);
+            }
+        });
+    }
 }
