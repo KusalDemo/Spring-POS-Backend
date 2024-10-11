@@ -12,6 +12,7 @@ import lk.ijse.gdse67.springposbackend.entity.impl.*;
 import lk.ijse.gdse67.springposbackend.exception.CustomerNotFoundException;
 import lk.ijse.gdse67.springposbackend.exception.ItemNotFoundException;
 import lk.ijse.gdse67.springposbackend.exception.OrderNotFoundException;
+import lk.ijse.gdse67.springposbackend.exception.ReturnDateExceededException;
 import lk.ijse.gdse67.springposbackend.service.OrderService;
 import lk.ijse.gdse67.springposbackend.util.AppUtil;
 import lk.ijse.gdse67.springposbackend.util.Mapping;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,6 +92,19 @@ public class OrderServiceImpl implements OrderService {
             PlaceOrderDto placeOrderDto = mapper.mapToPlaceOrderDto(placeOrder,orderItemList);
             placeOrderDtos.add(placeOrderDto);
         });
+        /*Testing*/
+        List<OrderItemDto> orderItemDtos= new ArrayList<>();
+        OrderItemDto orderItemDto = OrderItemDto.builder()
+                .orderId("O-5a4ca8f6-c414-4d97-b3f7-773fb6b5edc5")
+                .itemId("I-fda353fe-b65d-44a5-b42e-c282d9814dda")
+                .itemCount(2)
+                .total(450000)
+                .build();
+        orderItemDtos.add(orderItemDto);
+        returnOrderItems(orderItemDtos);
+        // =============================
+
+
         return placeOrderDtos;
     }
 
@@ -114,24 +129,30 @@ public class OrderServiceImpl implements OrderService {
 
     public void returnOrderItems(List<OrderItemDto> orderItemDtos){
         orderItemDtos.forEach(orderItemDto -> {
-            OrderItemId orderItemId = new OrderItemId(orderItemDto.getOrderId(), orderItemDto.getItemId());
-            Item item = itemDao.getReferenceById(orderItemId.getItemId());
-            if (item == null) {
-                throw new ItemNotFoundException("Item not found");
+            PlaceOrder fetchedOrder = orderDao.getReferenceById(orderItemDto.getOrderId());
+            LocalDate today = LocalDate.now();
+            LocalDate sevenDaysAgo = today.minusDays(7);
+            if(fetchedOrder.getOrderDate().toLocalDate().isBefore(sevenDaysAgo)){
+                throw new ReturnDateExceededException("Return Date Exceeded");
             }else{
-                item.setQty(item.getQty() + orderItemDto.getItemCount());
-                itemDao.save(item);
-            }
+                OrderItemId orderItemId = new OrderItemId(orderItemDto.getOrderId(), orderItemDto.getItemId());
+                Item item = itemDao.getReferenceById(orderItemId.getItemId());
+                if (item == null) {
+                    throw new ItemNotFoundException("Item not found");
+                }else{
+                    item.setQty(item.getQty() + orderItemDto.getItemCount());
+                    itemDao.save(item);
+                }
 
-            OrderItem fetchedOrderItem = orderItemDao.getReferenceById(orderItemId);
-            if (fetchedOrderItem.getItemCount() == 0) {
-                orderItemDao.deleteById(orderItemId);
-            }else{
-                PlaceOrder fetchedOrder = orderDao.getReferenceById(orderItemDto.getOrderId());
-                fetchedOrder.setBalance(fetchedOrder.getBalance() + ((orderItemDto.getTotal()/100)*(100-fetchedOrder.getDiscount())*orderItemDto.getItemCount()));
-                fetchedOrderItem.setItemCount(fetchedOrderItem.getItemCount() - orderItemDto.getItemCount());
-                fetchedOrderItem.setTotal(fetchedOrderItem.getTotal() - (fetchedOrderItem.getUnitPrice()*orderItemDto.getItemCount()));
-                orderItemDao.save(fetchedOrderItem);
+                OrderItem fetchedOrderItem = orderItemDao.getReferenceById(orderItemId);
+                if (fetchedOrderItem.getItemCount() == 0) {
+                    orderItemDao.deleteById(orderItemId);
+                }else{
+                    fetchedOrder.setBalance(fetchedOrder.getBalance() + ((orderItemDto.getTotal()/100)*(100-fetchedOrder.getDiscount())*orderItemDto.getItemCount()));
+                    fetchedOrderItem.setItemCount(fetchedOrderItem.getItemCount() - orderItemDto.getItemCount());
+                    fetchedOrderItem.setTotal(fetchedOrderItem.getTotal() - (fetchedOrderItem.getUnitPrice()*orderItemDto.getItemCount()));
+                    orderItemDao.save(fetchedOrderItem);
+                }
             }
         });
     }
