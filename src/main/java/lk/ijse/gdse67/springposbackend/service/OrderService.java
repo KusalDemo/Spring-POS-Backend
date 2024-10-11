@@ -12,4 +12,5 @@ public interface OrderService {
     void addOrder(PlaceOrderDto placeOrderDto);
     List<PlaceOrderDto> getAllOrders();
     OrderStatus getOrder(String orderId);
+    void returnOrderItems(List<OrderItemDto> orderItemDtos);
 }

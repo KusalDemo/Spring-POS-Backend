@@ -3,10 +3,12 @@ package lk.ijse.gdse67.springposbackend.controller;
 import jakarta.persistence.EntityNotFoundException;
 import lk.ijse.gdse67.springposbackend.customStatusCodes.SelectedOrderStatus;
 import lk.ijse.gdse67.springposbackend.dto.OrderStatus;
+import lk.ijse.gdse67.springposbackend.dto.impl.OrderItemDto;
 import lk.ijse.gdse67.springposbackend.dto.impl.PlaceOrderDto;
 import lk.ijse.gdse67.springposbackend.exception.CustomerNotFoundException;
 import lk.ijse.gdse67.springposbackend.exception.ItemNotFoundException;
 import lk.ijse.gdse67.springposbackend.exception.OrderNotFoundException;
+import lk.ijse.gdse67.springposbackend.exception.ReturnDateExceededException;
 import lk.ijse.gdse67.springposbackend.service.OrderService;
 import lk.ijse.gdse67.springposbackend.util.Regex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +57,20 @@ public class OrderController {
         }catch (EntityNotFoundException | OrderNotFoundException e){
             e.printStackTrace();
             return new SelectedOrderStatus(2,"Order Not Found");
+        }
+    }
+
+    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> returnOrderItem(@RequestBody List<OrderItemDto> orderItemDtos){
+        try{
+            orderService.returnOrderItems(orderItemDtos);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }catch (ItemNotFoundException | ReturnDateExceededException e){
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } catch (Exception e){
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

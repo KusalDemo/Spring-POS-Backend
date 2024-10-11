@@ -92,19 +92,6 @@ public class OrderServiceImpl implements OrderService {
             PlaceOrderDto placeOrderDto = mapper.mapToPlaceOrderDto(placeOrder,orderItemList);
             placeOrderDtos.add(placeOrderDto);
         });
-        /*Testing*/
-        List<OrderItemDto> orderItemDtos= new ArrayList<>();
-        OrderItemDto orderItemDto = OrderItemDto.builder()
-                .orderId("O-5a4ca8f6-c414-4d97-b3f7-773fb6b5edc5")
-                .itemId("I-fda353fe-b65d-44a5-b42e-c282d9814dda")
-                .itemCount(2)
-                .total(450000)
-                .build();
-        orderItemDtos.add(orderItemDto);
-        returnOrderItems(orderItemDtos);
-        // =============================
-
-
         return placeOrderDtos;
     }
 
@@ -127,6 +114,8 @@ public class OrderServiceImpl implements OrderService {
         return orderItemDtos;
     }
 
+
+    @Override
     public void returnOrderItems(List<OrderItemDto> orderItemDtos){
         orderItemDtos.forEach(orderItemDto -> {
             PlaceOrder fetchedOrder = orderDao.getReferenceById(orderItemDto.getOrderId());
