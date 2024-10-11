@@ -9,10 +9,7 @@ import lk.ijse.gdse67.springposbackend.dto.OrderStatus;
 import lk.ijse.gdse67.springposbackend.dto.impl.OrderItemDto;
 import lk.ijse.gdse67.springposbackend.dto.impl.PlaceOrderDto;
 import lk.ijse.gdse67.springposbackend.entity.impl.*;
-import lk.ijse.gdse67.springposbackend.exception.CustomerNotFoundException;
-import lk.ijse.gdse67.springposbackend.exception.ItemNotFoundException;
-import lk.ijse.gdse67.springposbackend.exception.OrderNotFoundException;
-import lk.ijse.gdse67.springposbackend.exception.ReturnDateExceededException;
+import lk.ijse.gdse67.springposbackend.exception.*;
 import lk.ijse.gdse67.springposbackend.service.OrderService;
 import lk.ijse.gdse67.springposbackend.util.AppUtil;
 import lk.ijse.gdse67.springposbackend.util.Mapping;
@@ -47,7 +44,7 @@ public class OrderServiceImpl implements OrderService {
         placeOrder.setOrderId(orderId);
 
         Customer orderPlacingCustomer = customerDao.getReferenceById(placeOrderDto.getCustomerId());
-        if(orderPlacingCustomer == null){
+        if (orderPlacingCustomer == null) {
             throw new CustomerNotFoundException("Customer not found");
         }
         placeOrder.setCustomer(orderPlacingCustomer);
@@ -60,10 +57,11 @@ public class OrderServiceImpl implements OrderService {
         placeOrderDto.getOrderItems().forEach(orderItemDto -> {
             OrderItemId orderItemId = new OrderItemId(orderId, orderItemDto.getItemId());
             Item orderItem = itemDao.getReferenceById(orderItemDto.getItemId());
-            if(orderItem == null){
+            if (orderItem == null) {
                 throw new ItemNotFoundException("Item not found");
+            }else if(orderItem.getQty() < orderItemDto.getItemCount()){
+                throw new ItemOutOfStockException("Item out of stock");
             }
-
             orderItem.setQty(orderItem.getQty() - orderItemDto.getItemCount());
             itemDao.save(orderItem);
 
@@ -85,11 +83,11 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<PlaceOrderDto> getAllOrders() {
         List<PlaceOrder> placeOrders = orderDao.findAll();
-        List<PlaceOrderDto> placeOrderDtos=new ArrayList<>();
+        List<PlaceOrderDto> placeOrderDtos = new ArrayList<>();
 
         placeOrders.forEach(placeOrder -> {
             List<OrderItemDto> orderItemList = getOrderItemList(placeOrder.getOrderItems());
-            PlaceOrderDto placeOrderDto = mapper.mapToPlaceOrderDto(placeOrder,orderItemList);
+            PlaceOrderDto placeOrderDto = mapper.mapToPlaceOrderDto(placeOrder, orderItemList);
             placeOrderDtos.add(placeOrderDto);
         });
         return placeOrderDtos;
@@ -98,15 +96,15 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderStatus getOrder(String orderId) {
         PlaceOrder placeOrder = orderDao.getReferenceById(orderId);
-        if(placeOrder == null){
+        if (placeOrder == null) {
             throw new OrderNotFoundException("Order not found");
         }
         List<OrderItemDto> orderItemList = getOrderItemList(placeOrder.getOrderItems());
-        return mapper.mapToPlaceOrderDto(placeOrder,orderItemList);
+        return mapper.mapToPlaceOrderDto(placeOrder, orderItemList);
     }
 
-    private List<OrderItemDto> getOrderItemList(List<OrderItem> orderItems){
-        List<OrderItemDto> orderItemDtos=new ArrayList<>();
+    private List<OrderItemDto> getOrderItemList(List<OrderItem> orderItems) {
+        List<OrderItemDto> orderItemDtos = new ArrayList<>();
         orderItems.forEach(orderItem -> {
             OrderItemDto orderItemDto = mapper.mapToOrderItemDto(orderItem);
             orderItemDtos.add(orderItemDto);
@@ -116,30 +114,29 @@ public class OrderServiceImpl implements OrderService {
 
 
     @Override
-    public void returnOrderItems(List<OrderItemDto> orderItemDtos){
+    public void returnOrderItems(List<OrderItemDto> orderItemDtos) {
         orderItemDtos.forEach(orderItemDto -> {
             PlaceOrder fetchedOrder = orderDao.getReferenceById(orderItemDto.getOrderId());
             LocalDate today = LocalDate.now();
             LocalDate sevenDaysAgo = today.minusDays(7);
-            if(fetchedOrder.getOrderDate().toLocalDate().isBefore(sevenDaysAgo)){
+            if (fetchedOrder.getOrderDate().toLocalDate().isBefore(sevenDaysAgo)) {
                 throw new ReturnDateExceededException("Return Date Exceeded");
-            }else{
+            } else {
                 OrderItemId orderItemId = new OrderItemId(orderItemDto.getOrderId(), orderItemDto.getItemId());
+                OrderItem fetchedOrderItem = orderItemDao.getReferenceById(orderItemId);
+                if (fetchedOrderItem.getItemCount() == 0 || fetchedOrderItem.getItemCount() < orderItemDto.getItemCount()) {
+                    throw new DataPersistException("Order Item already returned or too many items attempted to be returned");
+                }
                 Item item = itemDao.getReferenceById(orderItemId.getItemId());
                 if (item == null) {
                     throw new ItemNotFoundException("Item not found");
-                }else{
+                } else {
                     item.setQty(item.getQty() + orderItemDto.getItemCount());
                     itemDao.save(item);
-                }
 
-                OrderItem fetchedOrderItem = orderItemDao.getReferenceById(orderItemId);
-                if (fetchedOrderItem.getItemCount() == 0) {
-                    orderItemDao.deleteById(orderItemId);
-                }else{
-                    fetchedOrder.setBalance(fetchedOrder.getBalance() + ((orderItemDto.getTotal()/100)*(100-fetchedOrder.getDiscount())*orderItemDto.getItemCount()));
+                    fetchedOrder.setBalance(fetchedOrder.getBalance() + ((orderItemDto.getTotal() / 100) * (100 - fetchedOrder.getDiscount()) * orderItemDto.getItemCount()));
                     fetchedOrderItem.setItemCount(fetchedOrderItem.getItemCount() - orderItemDto.getItemCount());
-                    fetchedOrderItem.setTotal(fetchedOrderItem.getTotal() - (fetchedOrderItem.getUnitPrice()*orderItemDto.getItemCount()));
+                    fetchedOrderItem.setTotal(fetchedOrderItem.getTotal() - (fetchedOrderItem.getUnitPrice() * orderItemDto.getItemCount()));
                     orderItemDao.save(fetchedOrderItem);
                 }
             }

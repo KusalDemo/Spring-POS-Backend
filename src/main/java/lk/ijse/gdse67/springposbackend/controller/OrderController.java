@@ -5,10 +5,7 @@ import lk.ijse.gdse67.springposbackend.customStatusCodes.SelectedOrderStatus;
 import lk.ijse.gdse67.springposbackend.dto.OrderStatus;
 import lk.ijse.gdse67.springposbackend.dto.impl.OrderItemDto;
 import lk.ijse.gdse67.springposbackend.dto.impl.PlaceOrderDto;
-import lk.ijse.gdse67.springposbackend.exception.CustomerNotFoundException;
-import lk.ijse.gdse67.springposbackend.exception.ItemNotFoundException;
-import lk.ijse.gdse67.springposbackend.exception.OrderNotFoundException;
-import lk.ijse.gdse67.springposbackend.exception.ReturnDateExceededException;
+import lk.ijse.gdse67.springposbackend.exception.*;
 import lk.ijse.gdse67.springposbackend.service.OrderService;
 import lk.ijse.gdse67.springposbackend.util.Regex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +28,7 @@ public class OrderController {
         try{
             orderService.addOrder(placeOrderDto);
             return new ResponseEntity<>(HttpStatus.CREATED);
-        }catch (CustomerNotFoundException | ItemNotFoundException e){
+        }catch (CustomerNotFoundException | ItemNotFoundException | ItemOutOfStockException e){
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }catch (Exception e){
@@ -65,7 +62,7 @@ public class OrderController {
         try{
             orderService.returnOrderItems(orderItemDtos);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }catch (ItemNotFoundException | ReturnDateExceededException e){
+        }catch (ItemNotFoundException | ReturnDateExceededException | DataPersistException e){
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (Exception e){
