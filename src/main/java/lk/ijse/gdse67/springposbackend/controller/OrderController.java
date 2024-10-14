@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/order")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:63342")
 public class OrderController {
     @Autowired
     private OrderService orderService;
@@ -29,7 +29,7 @@ public class OrderController {
         try{
             orderService.addOrder(placeOrderDto);
             return new ResponseEntity<>(HttpStatus.CREATED);
-        }catch (CustomerNotFoundException | ItemNotFoundException | ItemOutOfStockException e){
+        }catch (CustomerNotFoundException | ItemNotFoundException | ItemOutOfStockException | CustomerNotAvailableException e){
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }catch (Exception e){
