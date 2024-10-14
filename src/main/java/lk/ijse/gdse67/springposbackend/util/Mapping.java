@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class Mapping {
@@ -27,9 +28,12 @@ public class Mapping {
     public Customer mapToCustomer(CustomerDto customerDto){
         return modelMapper.map(customerDto, Customer.class);
     }
-    public List<CustomerDto> mapToCustomerDtoList(List<Customer> customers){
-        return modelMapper.map(customers, List.class);
+    public List<CustomerDto> mapToCustomerDtoList(List<Customer> customers) {
+        return customers.stream()
+                .map(customer -> modelMapper.map(customer, CustomerDto.class))
+                .collect(Collectors.toList());
     }
+
 
     // Item Related Mappings
 
@@ -40,7 +44,9 @@ public class Mapping {
         return modelMapper.map(itemDto,Item.class);
     }
     public List<ItemDto> mapToItemDtoList(List<Item> items){
-        return modelMapper.map(items, List.class);
+        return items.stream()
+                .map(item -> modelMapper.map(item, ItemDto.class))
+                .collect(Collectors.toList());
     }
 
     // Order related Mappings
