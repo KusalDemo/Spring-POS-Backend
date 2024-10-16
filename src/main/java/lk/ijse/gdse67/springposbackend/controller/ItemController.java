@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/item")
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class ItemController {
     @Autowired
     private ItemService itemService;
