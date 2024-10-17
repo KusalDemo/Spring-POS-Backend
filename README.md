@@ -37,9 +37,6 @@ This project is a backend API for a Point of Sale (POS) system, developed with a
 - Build the project using Maven.
 - Run the Spring application.
 
-6. **Access the Application**
-- Once the backend is running, access the frontend application via your web browser.
-- Frontend > https://github.com/KusalDemo/POS-Frontend.git
 
 ## Logging Configuration
 
